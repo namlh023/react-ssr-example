@@ -20,21 +20,22 @@ app.use("^/$", (req, res, next) => {
 
     const app = ReactDOMServer.renderToString(<App />);
     const helmet = Helmet.renderStatic();
+
     let result = data.replace(
       '<div id="root"></div>',
       `<div id="root">${ReactDOMServer.renderToString(<App />)}</div>`
     );
 
-    const metaTagRegex = /^<meta.*>$/g;
+    const metaTagRegex = /<meta[^/>]*\/>/gms;
+    const titleTagRegex = /<title>.*<\/title>/gms;
 
-    console.log("result", result.match(metaTagRegex));
+    result = result.replace(metaTagRegex, "").replace(titleTagRegex, "");
 
     return res.send(
       result
         .replace('<div id="root"></div>', `<div id="root">${app}</div>`)
-        .replace(metaTagRegex, `${helmet.meta.toString()}`)
+        .replace("</head>", `${helmet.meta.toString()}</head>`)
         .replace("</head>", `${helmet.title.toString()}</head>`)
-        .replace("</head>", `${helmet.script.toString()}</head>`)
     );
   });
 });
