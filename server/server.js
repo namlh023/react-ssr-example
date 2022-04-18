@@ -5,31 +5,31 @@ import path from "path";
 import React from "react";
 import ReactDOMServer from "react-dom/server";
 import { Helmet } from "react-helmet";
+import { StaticRouter } from "react-router-dom/server";
 import App from "../src/App";
 
 const PORT = 8000;
 
 const app = express();
 
-app.use("^/$", (req, res, next) => {
+app.get("*", (req, res) => {
   fs.readFile(path.resolve("./build/index.html"), "utf-8", (err, data) => {
     if (err) {
       console.log(err);
       return res.status(500).send("Some error happened");
     }
 
-    const app = ReactDOMServer.renderToString(<App />);
-    const helmet = Helmet.renderStatic();
-
-    let result = data.replace(
-      '<div id="root"></div>',
-      `<div id="root">${ReactDOMServer.renderToString(<App />)}</div>`
+    const app = ReactDOMServer.renderToString(
+      <StaticRouter location={req.url}>
+        <App />
+      </StaticRouter>
     );
+    const helmet = Helmet.renderStatic();
 
     const metaTagRegex = /<meta[^/>]*\/>/gms;
     const titleTagRegex = /<title>.*<\/title>/gms;
 
-    result = result.replace(metaTagRegex, "").replace(titleTagRegex, "");
+    let result = data.replace(metaTagRegex, "").replace(titleTagRegex, "");
 
     return res.send(
       result
